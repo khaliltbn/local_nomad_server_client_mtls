@@ -17,17 +17,21 @@ This guide provides the steps to run a local, mTLS-enabled Nomad cluster using t
 Run the following commands from the project root to generate the necessary TLS certificates and move them into the `certs/` directory.
 
 # 1. Create the Certificate Authority
+```bash
 nomad tls ca create
-
+```
 # 2. Create the Server Certificate
+```bash
 nomad tls cert create -server -additional-dnsname=nomad-server
-
+```
 # 3. Create the Client Certificate
+```bash
 nomad tls cert create -client
-
+```
 # 4. Move certificates to the correct directory
+```bash
 mv *.pem certs/
-
+```
 ### Step 2: Start the Cluster
 Launch the Nomad server and client containers in the background.
 
