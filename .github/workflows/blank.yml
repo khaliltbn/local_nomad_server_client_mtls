@@ -1,0 +1,75 @@
+name: Build, Push, and Test in Container
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_name:
+        description: 'The name of the Homebrew package to test'
+        required: true
+        default: 'your-brew-package'
+
+jobs:
+  # Job 1: Build the image and push it to the GitHub Container Registry (GHCR)
+  build-and-push:
+    name: Build and Push Image
+    runs-on: ubuntu-latest
+    # Grant permissions for the GITHUB_TOKEN to push to GHCR
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Create Dockerfile 📝
+        run: |
+          # (This is the same Dockerfile generation step as before)
+          cat <<EOF > Dockerfile.generated
+          FROM ubuntu:22.04
+          ENV DEBIAN_FRONTEND=noninteractive
+          RUN apt-get update && apt-get install -y build-essential procps curl file git
+          RUN /bin/bash -c "\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          SHELL ["/bin/bash", "-c"]
+          RUN echo 'eval "\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /etc/profile
+          RUN eval "\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && brew install ${{ github.event.inputs.package_name }}
+          EOF
+
+      - name: Log in to GitHub Container Registry 🔐
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image 🏗️➡️
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.generated
+          # This pushes the image to GHCR
+          push: true
+          # Tags the image with the GHCR path
+          tags: ghcr.io/${{ github.repository }}:latest
+
+  # Job 2: Run all steps inside the container you just pushed
+  test-in-container:
+    name: Test Inside Container
+    runs-on: ubuntu-latest
+    needs: build-and-push # This job waits for the first one to finish
+
+    # This is the key part. The runner will automatically pull the image
+    # from GHCR before starting the steps.
+    container:
+      image: ghcr.io/${{ github.repository }}:latest
+
+    steps:
+      - name: Run tests 🧪
+        run: |
+          echo "--- Running version check ---"
+          # These commands run directly inside your container!
+          /home/linuxbrew/.linuxbrew/bin/your-tool-executable --version
+
+          echo "--- Running feature test ---"
+          /home/linuxbrew/.linuxbrew/bin/your-tool-executable --some-feature --with-args
+          
