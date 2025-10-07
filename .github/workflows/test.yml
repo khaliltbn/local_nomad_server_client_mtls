@@ -90,6 +90,7 @@ jobs:
 
     steps:
       - name: Run tests 🧪
+        shell: bash
         run: |
           echo "--- Running version check ---"
           # These commands run directly inside your container!
