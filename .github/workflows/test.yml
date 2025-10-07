@@ -73,8 +73,8 @@ jobs:
         run: |
           echo "--- Running version check ---"
           # These commands run directly inside your container!
-          /home/linuxbrew/.linuxbrew/bin/your-tool-executable --version
+          guepard --version
 
           echo "--- Running feature test ---"
-          /home/linuxbrew/.linuxbrew/bin/your-tool-executable --some-feature --with-args
+          guepard --help
           
