@@ -4,9 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       package_name:
-        description: 'The name of the Homebrew package to test'
+        description: 'guepard'
         required: true
-        default: 'your-brew-package'
+        default: 'guepard'
+      package_repo:
+        description: 'guepard-corp/guepard'
+        required: true
+        default: 'guepard-corp/guepard'
 
 jobs:
   # Job 1: Build the image and push it to the GitHub Container Registry (GHCR)
@@ -29,10 +33,11 @@ jobs:
           FROM ubuntu:22.04
           ENV DEBIAN_FRONTEND=noninteractive
           RUN apt-get update && apt-get install -y build-essential procps curl file git
-          RUN /bin/bash -c "\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          SHELL ["/bin/bash", "-c"]
-          RUN echo 'eval "\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /etc/profile
-          RUN eval "\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && brew install ${{ github.event.inputs.package_name }}
+          RUN test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+          RUN test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          RUN echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
+          RUN brew tap ${{ github.event.inputs.package_repo }}
+          RUN brew install ${{ github.event.inputs.package_name }}
           EOF
 
       - name: Log in to GitHub Container Registry 🔐
