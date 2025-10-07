@@ -34,17 +34,28 @@ jobs:
 
           RUN apt-get update && apt-get install -y build-essential procps curl file git
           
-          # Create and switch to a non-root user
           RUN useradd -ms /bin/bash linuxbrew
           USER linuxbrew
           WORKDIR /home/linuxbrew
 
+          # Set the PATH for all subsequent instructions
           ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:\$PATH"
 
+          # Main installation command
           RUN \
               /bin/bash -c "\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && \
               brew tap ${{ github.event.inputs.package_repo }} && \
               brew install ${{ github.event.inputs.package_name }}
+
+          # --- DEBUGGING STEP ---
+          # This will run after the install and show us what's actually there.
+          RUN \
+              echo "--- DEBUGGING INFO ---" && \
+              echo "Current PATH is: \$PATH" && \
+              echo "--- Listing Homebrew bin directory ---" && \
+              ls -la /home/linuxbrew/.linuxbrew/bin && \
+              echo "--- Trying to find executable ---" && \
+              which guepard || echo "'which guepard' failed"
 
           USER root
           EOF
