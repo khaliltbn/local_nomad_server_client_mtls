@@ -90,13 +90,16 @@ jobs:
       image: ghcr.io/${{ github.repository }}:latest
 
     steps:
-      - name: Run tests 🧪
+      - name: Test 1 - Version Check 🧪
         shell: bash
-        run: |
-          echo "--- Running version check ---"
-          # These commands run directly inside your container!
-          guepard --version
+        run: guepard --version
 
-          echo "--- Running feature test ---"
-          guepard --help
+      - name: Test 2 - Help Command Check 🧪
+        shell: bash
+        run: guepard --help
+
+      # You can add as many other test steps as you need
+      - name: Test 3 - Another Feature 🧪
+        shell: bash
+        run: guepard list --help
           
